@@ -9,7 +9,7 @@ import csv
 print("CWD:", os.getcwd())
 print("App started!")
 
-SPREADSHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1z8kjLvFh9nK18Jhihg7frVux-6k3vdT28NQKuWbUdyM/export?format=csv"
+SPREADSHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1BlRlU8fQUNQVxU5NJbm8IVDvgCvtT8xWwhz88akD8dE/export?format=csv"
 ATTACHMENTS_DIR = "attachments"
 
 app = Flask(__name__)
@@ -28,6 +28,8 @@ def harvest_from_google_sheet():
     response = requests.get(SPREADSHEET_CSV_URL)
     response.raise_for_status()
     csv_content = response.content.decode('utf-8')
+    print("CSV Content Preview:")
+    print(csv_content[:500])  # Print first 500 chars of CSV for debug
 
     # Ensure attachments directory exists
     if not os.path.exists(ATTACHMENTS_DIR):
@@ -35,8 +37,11 @@ def harvest_from_google_sheet():
 
     candidates = []
     reader = csv.DictReader(csv_content.splitlines())
+    print("CSV Headers:", reader.fieldnames)  # Print the headers being read
+
     for row in reader:
-        url = row.get('resume_link')  # Change if your column name is different
+        print("Row Example:", row)  # Print a sample row for debug
+        url = row.get('Resume')  # 'Resume' must match your sheet header
         if not url:
             continue
         filename = url.split('/')[-1].split('?')[0]
@@ -70,7 +75,6 @@ def harvest_resumes():
     print("Harvest endpoint was hit!")
     candidates = harvest_from_google_sheet()
     return jsonify({'harvested': len(candidates), 'candidates': candidates})
-
 
 @app.route('/api/candidates', methods=['GET'])
 def list_candidates():
